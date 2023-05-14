@@ -17,7 +17,7 @@ const otherFiles = [{
 fs.rmSync(outDir, { recursive: true, force: true });
 fs.mkdirSync(outDir);
 
-var index = header({title: "index"});
+var index = header({title: "Index"});
 index = index + `<h1>Blogs!</h1>`;
 
 converter = new showdown.Converter();
