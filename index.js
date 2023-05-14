@@ -5,7 +5,8 @@ const outDir = "./out/";
 
 const posts = [{
     file: "./posts/first.md",
-    title: "First Post!"
+    title: "First Post!",
+    summary: "This post is a cool post about the process of writing posts"
 }];
 
 const otherFiles = [{
@@ -16,13 +17,23 @@ const otherFiles = [{
 fs.rmSync(outDir, { recursive: true, force: true });
 fs.mkdirSync(outDir);
 
+var index = header({title: "index"});
+index = index + `<h1>Blogs!</h1>`;
+
 converter = new showdown.Converter();
 for (const post of posts) {
     const text = fs.readFileSync(post.file, 'utf8');
     const html = header(post) + converter.makeHtml(text) + footer(post);
     console.log(html);
-    fs.writeFileSync(outDir + titleToHtmlFileName(post), html);
+    const fileName = titleToHtmlFileName(post);
+    fs.writeFileSync(outDir + fileName, html);
+    index = index + `
+<a href="/${fileName}"><h3>${post.title}</h3></a>
+<p>${post.summary}`;
 }
+
+index = index + footer();
+fs.writeFileSync(outDir + "index.html", index);
 
 for (const file of otherFiles) {
     fs.copyFileSync(file.source, outDir + file.destName);
@@ -51,3 +62,4 @@ function footer(post) {
 </body>
 </html>`
 }
+
