@@ -14,8 +14,9 @@ const otherFiles = [{
     destName: "blogStyle.css"
 }];
 
-fs.rmSync(outDir, { recursive: true, force: true });
-fs.mkdirSync(outDir);
+if (!fs.existsSync(outDir)){
+    fs.mkdirSync(outDir);
+}
 
 var index = header({title: "Index"});
 index = index + `<h1>Blogs!</h1>`;
@@ -24,7 +25,6 @@ converter = new showdown.Converter();
 for (const post of posts) {
     const text = fs.readFileSync(post.file, 'utf8');
     const html = header(post) + converter.makeHtml(text) + footer(post);
-    console.log(html);
     const fileName = titleToHtmlFileName(post);
     fs.writeFileSync(outDir + fileName, html);
     index = index + `
