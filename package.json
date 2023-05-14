@@ -9,6 +9,7 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "reload-static": "^1.0.1",
     "showdown": "^2.1.0"
   }
 }

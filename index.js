@@ -1,5 +1,6 @@
 const fs = require('fs');
 const showdown  = require('showdown');
+const statik = require('reload-static');
 
 const outDir = "./out/";
 
@@ -26,6 +27,15 @@ fs.watch(staticDir, (eventType, filename) => {
 });
 
 gen();
+
+const file = new statik.Server(outDir);
+const server = require('http').createServer(function (request, response) {
+    request.addListener('end', function () {
+        file.serve(request, response);
+    }).resume();
+}).listen(8080);
+
+file.setReloadable(server);
 
 function gen() {
     console.log("Generating...");
