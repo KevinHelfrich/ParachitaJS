@@ -2,3 +2,8 @@ body {
     width: 60%;
     padding-left: 3%;
 }
+
+h1 {
+    font-size: 32px;
+    color: red;
+}

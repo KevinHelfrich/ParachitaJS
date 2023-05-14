@@ -3,40 +3,56 @@ const showdown  = require('showdown');
 
 const outDir = "./out/";
 
+const postsDir = "./posts/";
+const staticDir = "./static/";
+
 const posts = [{
-    file: "./posts/first.md",
+    file: "first.md",
     title: "First Post!",
     summary: "This post is a cool post about the process of writing posts"
 }];
 
 const otherFiles = [{
-    source: "./static/blogStyle.css",
+    file: "blogStyle.css",
     destName: "blogStyle.css"
 }];
 
-if (!fs.existsSync(outDir)){
-    fs.mkdirSync(outDir);
-}
+fs.watch(postsDir, (eventType, filename) => {
+    gen();
+});
 
-var index = header({title: "Index"});
-index = index + `<h1>Blogs!</h1>`;
+fs.watch(staticDir, (eventType, filename) => {
+    gen();
+});
 
-converter = new showdown.Converter();
-for (const post of posts) {
-    const text = fs.readFileSync(post.file, 'utf8');
-    const html = header(post) + converter.makeHtml(text) + footer(post);
-    const fileName = titleToHtmlFileName(post);
-    fs.writeFileSync(outDir + fileName, html);
-    index = index + `
-<a href="/${fileName}"><h3>${post.title}</h3></a>
-<p>${post.summary}`;
-}
+gen();
 
-index = index + footer();
-fs.writeFileSync(outDir + "index.html", index);
+function gen() {
+    console.log("Generating...");
+    if (!fs.existsSync(outDir)){
+        fs.mkdirSync(outDir);
+    }
 
-for (const file of otherFiles) {
-    fs.copyFileSync(file.source, outDir + file.destName);
+    var index = header({title: "Index"});
+    index = index + `<h1>Blogs!</h1>`;
+
+    converter = new showdown.Converter();
+    for (const post of posts) {
+        const text = fs.readFileSync(postsDir + post.file, 'utf8');
+        const html = header(post) + converter.makeHtml(text) + footer(post);
+        const fileName = titleToHtmlFileName(post);
+        fs.writeFileSync(outDir + fileName, html);
+        index = index + `
+    <a href="/${fileName}"><h3>${post.title}</h3></a>
+    <p>${post.summary}`;
+    }
+
+    index = index + footer();
+    fs.writeFileSync(outDir + "index.html", index);
+
+    for (const file of otherFiles) {
+        fs.copyFileSync(staticDir + file.file, outDir + file.destName);
+    }
 }
 
 function titleToHtmlFileName(post) {
