@@ -1,0 +1,9 @@
+[{
+    "file": "first.md",
+    "title": "First Post!",
+    "summary": "This post is a cool post about the process of writing posts"
+},{
+    "file": "second.md",
+    "title": "Second, boring post",
+    "summary": "This is a post that I only wrote to test the blog engine"
+}]

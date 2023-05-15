@@ -7,17 +7,6 @@ const outDir = "./out/";
 const postsDir = "./posts/";
 const staticDir = "./static/";
 
-const posts = [{
-    file: "first.md",
-    title: "First Post!",
-    summary: "This post is a cool post about the process of writing posts"
-}];
-
-const otherFiles = [{
-    file: "blogStyle.css",
-    destName: "blogStyle.css"
-}];
-
 fs.watch(postsDir, (eventType, filename) => {
     gen();
 });
@@ -42,6 +31,9 @@ function gen() {
     if (!fs.existsSync(outDir)){
         fs.mkdirSync(outDir);
     }
+
+    const posts = JSON.parse(fs.readFileSync(postsDir + "config.json"));
+    const otherFiles = JSON.parse(fs.readFileSync(staticDir + "config.json"));
 
     var index = header({title: "Index"});
     index = index + `<h1>Blogs!</h1>`;
