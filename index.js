@@ -36,7 +36,7 @@ function gen() {
     const otherFiles = JSON.parse(fs.readFileSync(staticDir + "config.json"));
 
     var index = header({title: "Index"});
-    index = index + `<h1>Blogs!</h1>`;
+    index = index + `<h1>Kev The Dev The Blog!</h1>`;
 
     converter = new showdown.Converter();
     for (const post of posts) {
@@ -45,8 +45,12 @@ function gen() {
         const fileName = titleToHtmlFileName(post);
         fs.writeFileSync(outDir + fileName, html);
         index = index + `
-    <a href="/${fileName}"><h3>${post.title}</h3></a>
-    <p>${post.summary}`;
+            <a href="/${fileName}">
+                <div class="blogBox">
+                    <h3>${post.title}</h3>
+                    <p>${post.summary}
+                </div>
+            </a>`;
     }
 
     index = index + footer();

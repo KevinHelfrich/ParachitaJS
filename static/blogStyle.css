@@ -1,9 +1,38 @@
 body {
     width: 60%;
     padding-left: 3%;
+    background-color: beige;
+    color: rgb(50, 51, 53);
+    background-image: url("BackGround.JPG");
+    background-size: cover;
 }
 
-h1 {
-    font-size: 32px;
-    color: green;
+a {
+    text-decoration: none;
+}
+
+.blogBox {
+   color: rgb(50, 51, 53); 
+   width: 48%;
+   background-color: bisque;
+   display: inline-block;
+   padding: 5px;
+}
+
+.blogBox > h3 {
+    margin-top: 5px;
+}
+
+.blogBox:hover {
+    animation: wiggle-wiggle 0.35s 1;
+}
+
+@keyframes wiggle-wiggle {
+    0% { transform: rotate(0deg); }
+    17% { transform: rotate(0.3deg); }
+    33% { transform: rotate(0eg); }
+    52% { transform: rotate(-0.3deg); }
+    68% { transform: rotate(0eg); }
+    85% { transform: rotate(0.3deg); }
+    100% { transform: rotate(0deg); }
 }

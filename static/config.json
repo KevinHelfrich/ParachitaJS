@@ -1,4 +1,7 @@
 [{
     "file": "blogStyle.css",
     "destName": "blogStyle.css"
+},{
+    "file": "BackGround.jpg",
+    "destName": "BackGround.jpg"
 }]
