@@ -41,12 +41,12 @@ function gen() {
     converter = new showdown.Converter();
     for (const post of posts) {
         const text = fs.readFileSync(postsDir + post.file, 'utf8');
-        const html = header(post) + converter.makeHtml(text) + footer(post);
+        const html = postHeader(post) + converter.makeHtml(text) + postFooter(post);
         const fileName = titleToHtmlFileName(post);
         fs.writeFileSync(outDir + fileName, html);
         index = index + `
             <a href="/${fileName}">
-                <div class="blogBox">
+                <div class="blog-box blog-info-box">
                     <h3>${post.title}</h3>
                     <p>${post.summary}
                 </div>
@@ -68,6 +68,19 @@ function titleToHtmlFileName(post) {
     return title + ".html";
 }
 
+function postHeader(post) {
+    return header(post) + `
+        <h1>${post.title}</h1>
+        <div class="blog-box">
+`
+}
+
+function postFooter(post) {
+    return `
+    </div>
+    ` + footer(post);
+}
+
 function header(post) {
     return `<!DOCTYPE html>
 <html>
@@ -84,4 +97,3 @@ function footer(post) {
 </body>
 </html>`
 }
-

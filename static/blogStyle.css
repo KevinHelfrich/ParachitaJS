@@ -11,19 +11,23 @@ a {
     text-decoration: none;
 }
 
-.blogBox {
+.blog-box {
    color: rgb(50, 51, 53); 
-   width: 48%;
    background-color: bisque;
    display: inline-block;
    padding: 5px;
+   width: 100%;
 }
 
-.blogBox > h3 {
+.blog-info-box {
+   width: 48%;
+}
+
+.blog-info-box > h3 {
     margin-top: 5px;
 }
 
-.blogBox:hover {
+.blog-info-box:hover {
     animation: wiggle-wiggle 0.35s 1;
 }
 
