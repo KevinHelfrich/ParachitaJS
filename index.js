@@ -160,32 +160,38 @@ process.chdir(folder);
 var pipelines = JSON.parse(fs.readFileSync("./config.json"));
 
 for(const pip of pipelines) {
-    var pipelineReg = {};
-    pipelineReg[pip.name] = {};
-    var testy = pipelineReg[pip.name];
-
+    var testy = {};
     testy.fileNames = findFilesForPipeline(pip);
-    testy.files = [];
-    testy.pipeline = buildPipeline(pip.pipeline);
 
-    for(const fileName of pipelineReg[pip.name].fileNames) {
-        var item = { name: fileName };
-        var file = fs.readFileSync("./" + fileName, 'utf8');
-        var hasConf = file.search(/\*\*\*\*\*/);
-        if(hasConf >= 0){
-            var conf = JSON.parse(file.substring(0, hasConf));
-            var text = file.substring(hasConf + 7);
-            item.itemConfig = conf;
-            item.text = text;
-        } else {
-            item.itemConfig = {};
-            item.text = file;
+    if(pip.type === "pipeline") {
+        testy.files = [];
+        testy.pipeline = buildPipeline(pip.pipeline);
+
+        for(const fileName of testy.fileNames) {
+            var item = { name: fileName };
+            var file = fs.readFileSync("./" + fileName, 'utf8');
+            var hasConf = file.search(/\*\*\*\*\*/);
+            if(hasConf >= 0){
+                var conf = JSON.parse(file.substring(0, hasConf));
+                var text = file.substring(hasConf + 7);
+                item.itemConfig = conf;
+                item.text = text;
+            } else {
+                item.itemConfig = {};
+                item.text = file;
+            }
+            
+            item.itemConfig["**originalFileName"] = fileName.substring(0, fileName.search(/\./));
+            testy.files.push(item);
         }
-        
-        item.itemConfig["**originalFileName"] = fileName.substring(0, fileName.search(/\./));
-        console.log(item.itemConfig);
-        testy.files.push(item);
+
+        executePipeline(testy.files, testy.pipeline);
     }
 
-    executePipeline(testy.files, testy.pipeline);
+    if(pip.type === "copy") {
+        console.log(testy.fileNames);
+        for(const fileName of testy.fileNames) {
+            fs.copyFileSync(fileName, pip.location + "/" + fileName);
+        }
+    }
 }

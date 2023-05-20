@@ -1,6 +1,7 @@
 [{
     "name": "genPosts",
     "fileMatcher": ".*\\.md$",
+    "type": "pipeline",
     "pipeline": [{
         "plugin": "Markdown2Html"
     },{
@@ -18,6 +19,7 @@
 },{
     "name": "genIndex",
     "fileMatcher": ".*\\.md$",
+    "type": "pipeline",
     "pipeline": [{
         "plugin": "ApplyPugTemplate",
         "pluginSettings": {
@@ -39,7 +41,8 @@
     }]
 },{
     "name": "genCSS",
-    "fileMatcher": ".*\\.sass",
+    "fileMatcher": ".*\\.scss",
+    "type": "pipeline",
     "pipeline": [{
         "plugin": "CompileSass"
     },{
@@ -49,4 +52,9 @@
             "extension": "css"
         }
     }]
+},{
+    "name": "copyImages",
+    "fileMatcher": ".*\\.JPG",
+    "type": "copy",
+    "location": "../out"
 }]
