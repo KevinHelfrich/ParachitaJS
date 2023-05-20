@@ -17,10 +17,6 @@ const plugins = {
         init: initWriteFile,
         apply: applyWriteFile
     },
-    "Aggregate":{
-        init: () => {},
-        apply: () => {}
-    },
     "CompileSass":{
         init: () => {},
         apply: applySassCompile
