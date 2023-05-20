@@ -1,0 +1,52 @@
+[{
+    "name": "genPosts",
+    "fileMatcher": ".*\\.md$",
+    "pipeline": [{
+        "plugin": "Markdown2Html"
+    },{
+        "plugin": "ApplyPugTemplate",
+        "pluginSettings": {
+            "template": "post.pug"
+        }
+    },{
+        "plugin": "WriteFile",
+        "pluginSettings": {
+            "location": "../out",
+            "extension": "html"
+        }
+    }]
+},{
+    "name": "genIndex",
+    "fileMatcher": ".*\\.md$",
+    "pipeline": [{
+        "plugin": "ApplyPugTemplate",
+        "pluginSettings": {
+            "template": "postSlug.pug"
+        }
+    },{
+        "plugin": "Aggregate"
+    },{
+        "plugin": "ApplyPugTemplate",
+        "pluginSettings": {
+            "template": "indexPage.pug"
+        }
+    },{
+        "plugin": "WriteFile",
+        "pluginSettings": {
+            "location": "../out",
+            "name": "index.html"
+        }
+    }]
+},{
+    "name": "genCSS",
+    "fileMatcher": ".*\\.sass",
+    "pipeline": [{
+        "plugin": "CompileSass"
+    },{
+        "plugin": "WriteFile",
+        "pluginSettings": {
+            "location": "../out",
+            "extension": "css"
+        }
+    }]
+}]
