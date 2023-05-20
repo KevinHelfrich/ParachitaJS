@@ -66,6 +66,11 @@ function initWriteFile(pluginSettings) {
     if(!pluginContext.strategy) {
         throw new Error("No valid file writing strategy found! Please provide either a file name or extension");
     }
+
+    if (!fs.existsSync(pluginContext.location)){
+        fs.mkdirSync(pluginContext.location);
+    }
+
     return pluginContext;
 }
 
