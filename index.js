@@ -88,35 +88,15 @@ function applyWriteFile(fileText, itemConfig, pluginContext) {
 }
 /// WriteFile Plugin End
 
-const testPipeline = {
-    "name": "genPosts",
-    "fileMatcher": ".*\\.md$",
-    "pipeline": [{
-        "plugin": "Markdown2Html"
-    },{
-        "plugin": "ApplyPugTemplate",
-        "pluginSettings": {
-            "template": "./betterPosts/post.pug"
-        }
-    },{
-        "plugin": "WriteFile",
-        "pluginSettings": {
-            "location": "./out",
-            "extension": "html"
-        }
-    }]
-};
-const folder = "betterPosts/";
-
 ///Pipeline Execution Engine Begin
-function buildPipeline(pipelineConfig) {
-    var pipeline = { stages: []};
-    for(const config of pipelineConfig) {
+function buildPipeline(pipeline) {
+    var pipelineData = { stages: []};
+    for(const config of pipeline) {
         var plugin = plugins[config.plugin];
         var pluginConfig = plugin.init(config.pluginSettings);
-        pipeline.stages.push({ plugin: plugin, config: pluginConfig });
+        pipelineData.stages.push({ plugin: plugin, config: pluginConfig });
     }
-    return pipeline;
+    return pipelineData;
 }
 
 function executePipeline(inputs, pipeline) {
@@ -134,15 +114,66 @@ function executePipeline(inputs, pipeline) {
         currents = nexts;
     }
 }
+
+function findFilesForPipeline(pipelineConfig) {
+    var matchingFiles = [];
+    var matcher = new RegExp(pipelineConfig.fileMatcher);
+
+    fs.readdirSync(".").forEach(file => {
+        if(matcher.test(file)) {
+            matchingFiles.push(file);
+        }
+    });
+
+    return matchingFiles;
+}
 ///Pipeline Execution Engine End
 
-var test = buildPipeline(testPipeline.pipeline);
+const testPipeline = {
+    "name": "genPosts",
+    "fileMatcher": ".*\\.md$",
+    "pipeline": [{
+        "plugin": "Markdown2Html"
+    },{
+        "plugin": "ApplyPugTemplate",
+        "pluginSettings": {
+            "template": "./post.pug"
+        }
+    },{
+        "plugin": "WriteFile",
+        "pluginSettings": {
+            "location": "../out",
+            "extension": "html"
+        }
+    }]
+};
+const folder = "betterPosts/";
 
-var inp = [{
-    text: "## Hello World!",
-    itemConfig: {
-        fileName: "hello"
+process.chdir(folder);
+
+var pipelineReg = {};
+pipelineReg[testPipeline.name] = {};
+var testy = pipelineReg[testPipeline.name];
+
+testy.fileNames = findFilesForPipeline(testPipeline);
+testy.files = [];
+testy.pipeline = buildPipeline(testPipeline.pipeline);
+
+for(const fileName of pipelineReg[testPipeline.name].fileNames) {
+    var item = { name: fileName };
+    var file = fs.readFileSync("./" + fileName, 'utf8');
+    var hasConf = file.search(/\*\*\*\*\*/);
+    if(hasConf >= 0){
+        var conf = JSON.parse(file.substring(0, hasConf));
+        var text = file.substring(hasConf + 7);
+        item.itemConfig = conf;
+        item.text = text;
+    } else {
+        item.itemConfig = {};
+        item.text = file;
     }
-}];
+    console.log(item);
+    testy.files.push(item);
+}
 
-executePipeline(inp, test);
+executePipeline(testy.files, testy.pipeline);
