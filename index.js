@@ -1,6 +1,7 @@
 const fs = require('fs');
 const pug = require('pug');
 const showdown  = require('showdown');
+const sass = require('sass');
 
 const plugins = {
     "Markdown2Html": {
@@ -21,9 +22,16 @@ const plugins = {
     },
     "CompileSass":{
         init: () => {},
-        apply: () => {}
+        apply: applySassCompile
     }
 }
+
+///CompileSass Plugin Begin
+function applySassCompile(text, itemConfig, pluginContext){
+    return sass.compileString(text).css;
+}
+
+///CompileSass Plugin End
 
 ///ApplyPugTemplate Plugin Begin
 function initPugTemplate(pluginSettings) {
@@ -36,8 +44,6 @@ function applyPugTemplate(generatedThing, itemConfig, pluginContext) {
     var templateData = {
         item: itemConfig
     };
-    
-    console.log(generatedThing);
 
     if(typeof generatedThing === "string") {
         templateData.text = generatedThing;
@@ -92,7 +98,8 @@ function applyWriteFile(fileText, itemConfig, pluginContext) {
     var fileName = pluginContext.location + "/";
 
     if(pluginContext.strategy === "writeWithExtension") {
-        fileName = fileName + itemConfig.fileName + "." + pluginContext.extension;
+        var file = itemConfig.fileName ? itemConfig.fileName : itemConfig["**originalFileName"];
+        fileName = fileName + file + "." + pluginContext.extension;
     } else if(pluginContext.strategy === "writeWithName") {
         fileName = fileName + pluginContext.fileName;
     }
@@ -120,7 +127,6 @@ function executePipeline(inputs, pipeline) {
         var nexts = [];
         if(stage.aggregator) {
             nexts[0] = { text: currents, itemConfig: {} };
-            console.log(nexts);
         } else {
             for(const item of currents) {
                 var next = {
@@ -175,6 +181,9 @@ for(const pip of pipelines) {
             item.itemConfig = {};
             item.text = file;
         }
+        
+        item.itemConfig["**originalFileName"] = fileName.substring(0, fileName.search(/\./));
+        console.log(item.itemConfig);
         testy.files.push(item);
     }
 
