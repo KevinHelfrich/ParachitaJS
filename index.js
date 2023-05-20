@@ -1,4 +1,5 @@
 const fs = require('fs');
+const pug = require('pug');
 const showdown  = require('showdown');
 
 const plugins = {
@@ -6,7 +7,10 @@ const plugins = {
         init: initMarkdown2Html,
         apply: applyMarkdown2Html
     },
-    "ApplyPugTemplate": {},
+    "ApplyPugTemplate": {
+        init: initPugTemplate,
+        apply: applyPugTemplate
+    },
     "WriteFile":{
         init: initWriteFile,
         apply: applyWriteFile
@@ -14,6 +18,22 @@ const plugins = {
     "Aggregate":{},
     "CompileSass":{}
 }
+
+///ApplyPugTemplate Plugin Begin
+function initPugTemplate(pluginSettings) {
+    var pluginContext = {};
+    pluginContext.pugPageCompiler = pug.compileFile(pluginSettings.template);
+    return pluginContext;
+}
+
+function applyPugTemplate(generatedText, itemConfig, pluginContext) {
+    return pluginContext.pugPageCompiler({
+        text: generatedText,
+        item: itemConfig
+    });
+}
+
+///ApplyPugTemplate Plugin End
 
 /// Markdown2Html Plugin Begin
 var mdConverter = new showdown.Converter();
@@ -23,13 +43,13 @@ function initMarkdown2Html(pluginSettings) {
     return pluginContext;
 }
 
-function applyMarkdown2Html(markdownText, itemConfig, pluginContext){
+function applyMarkdown2Html(markdownText, itemConfig, pluginContext) {
     return pluginContext.converter.makeHtml(markdownText);
 }
 /// Markdown2Html Plugin End
 
 /// WriteFile Plugin Begin
-function initWriteFile(pluginSettings){
+function initWriteFile(pluginSettings) {
     var pluginContext = {};
     pluginContext.location = pluginSettings.location;
 
@@ -49,7 +69,7 @@ function initWriteFile(pluginSettings){
     return pluginContext;
 }
 
-function applyWriteFile(fileText, itemConfig, pluginContext){
+function applyWriteFile(fileText, itemConfig, pluginContext) {
     var fileName = pluginContext.location + "/";
 
     if(pluginContext.strategy === "writeWithExtension") {
@@ -68,6 +88,11 @@ const testPipeline = {
     "fileMatcher": ".*\\.md$",
     "pipeline": [{
         "plugin": "Markdown2Html"
+    },{
+        "plugin": "ApplyPugTemplate",
+        "pluginSettings": {
+            "template": "./betterPosts/post.pug"
+        }
     },{
         "plugin": "WriteFile",
         "pluginSettings": {
