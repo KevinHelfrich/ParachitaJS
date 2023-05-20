@@ -172,7 +172,6 @@ for(const fileName of pipelineReg[testPipeline.name].fileNames) {
         item.itemConfig = {};
         item.text = file;
     }
-    console.log(item);
     testy.files.push(item);
 }
 

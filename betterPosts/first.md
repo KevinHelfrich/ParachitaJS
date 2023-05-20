@@ -1,4 +1,7 @@
-{"name": "This the first post!"}
+{
+  "name": "This is the first post!",
+  "fileName": "ThisIsTheFirstPost"
+}
 *****
 Here is a sample of some basic Markdown syntax that can be used when writing Markdown content in Astro.
 
