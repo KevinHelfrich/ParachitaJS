@@ -62,7 +62,6 @@ function applyPugTemplateAggregate(items, pluginContext) {
 
     return [{ text: pluginContext.pugPageCompiler(templateData), itemConfig: {}}];
 }
-
 ///ApplyPugTemplate Plugin End
 
 /// Markdown2Html Plugin Begin
@@ -149,6 +148,7 @@ function executePipeline(inputs, pipeline) {
         currents = nexts;
     }
 }
+///Pipeline Execution Engine End
 
 function findFilesForJob(pipelineConfig) {
     var matchingFiles = [];
@@ -162,7 +162,6 @@ function findFilesForJob(pipelineConfig) {
 
     return matchingFiles;
 }
-///Pipeline Execution Engine End
 
 const folder = "betterPosts/";
 process.chdir(folder);
