@@ -10,7 +10,8 @@ const plugins = {
     },
     "ApplyPugTemplate": {
         init: initPugTemplate,
-        apply: applyPugTemplate
+        apply: applyPugTemplate,
+        applyAggregate: applyPugTemplateAggregate
     },
     "WriteFile":{
         init: initWriteFile,
@@ -40,17 +41,26 @@ function initPugTemplate(pluginSettings) {
     return pluginContext;
 }
 
-function applyPugTemplate(generatedThing, itemConfig, pluginContext) {
+function applyPugTemplate(generatedText, itemConfig, pluginContext) {
     var templateData = {
-        item: itemConfig
+        item: itemConfig,
+        text: generatedText
     };
 
-    if(typeof generatedThing === "string") {
-        templateData.text = generatedThing;
-    } else {
-        templateData.objects = generatedThing;
-    }
     return pluginContext.pugPageCompiler(templateData);
+}
+
+function applyPugTemplateAggregate(items, pluginContext) {
+    var texts = [];
+    for(const item of items){
+        texts.push(item.text);
+    }
+
+    var templateData = {
+        texts: texts
+    };
+
+    return [{ text: pluginContext.pugPageCompiler(templateData), itemConfig: {}}];
 }
 
 ///ApplyPugTemplate Plugin End
@@ -115,7 +125,7 @@ function buildPipeline(pipeline) {
     for(const config of pipeline) {
         var plugin = plugins[config.plugin];
         var pluginConfig = plugin.init(config.pluginSettings);
-        pipelineData.stages.push({ plugin: plugin, config: pluginConfig, aggregator: config.plugin === "Aggregate" });
+        pipelineData.stages.push({ plugin: plugin, config: pluginConfig, aggregator: config.aggregate });
     }
     return pipelineData;
 }
@@ -126,7 +136,7 @@ function executePipeline(inputs, pipeline) {
     for(const stage of pipeline.stages) {
         var nexts = [];
         if(stage.aggregator) {
-            nexts[0] = { text: currents, itemConfig: {} };
+            nexts = stage.plugin.applyAggregate(currents, stage.config);
         } else {
             for(const item of currents) {
                 var next = {
@@ -140,7 +150,7 @@ function executePipeline(inputs, pipeline) {
     }
 }
 
-function findFilesForPipeline(pipelineConfig) {
+function findFilesForJob(pipelineConfig) {
     var matchingFiles = [];
     var matcher = new RegExp(pipelineConfig.fileMatcher);
 
@@ -161,7 +171,7 @@ var pipelines = JSON.parse(fs.readFileSync("./config.json"));
 
 for(const pip of pipelines) {
     var testy = {};
-    testy.fileNames = findFilesForPipeline(pip);
+    testy.fileNames = findFilesForJob(pip);
 
     if(pip.type === "pipeline") {
         testy.files = [];
@@ -189,7 +199,6 @@ for(const pip of pipelines) {
     }
 
     if(pip.type === "copy") {
-        console.log(testy.fileNames);
         for(const fileName of testy.fileNames) {
             fs.copyFileSync(fileName, pip.location + "/" + fileName);
         }

@@ -25,10 +25,9 @@
         "pluginSettings": {
             "template": "postSlug.pug"
         }
-    },{
-        "plugin": "Aggregate"
-    },{
+    }, {
         "plugin": "ApplyPugTemplate",
+        "aggregate": true,
         "pluginSettings": {
             "template": "indexPage.pug"
         }
