@@ -15,8 +15,14 @@ const plugins = {
         init: initWriteFile,
         apply: applyWriteFile
     },
-    "Aggregate":{},
-    "CompileSass":{}
+    "Aggregate":{
+        init: () => {},
+        apply: () => {}
+    },
+    "CompileSass":{
+        init: () => {},
+        apply: () => {}
+    }
 }
 
 ///ApplyPugTemplate Plugin Begin
@@ -26,11 +32,19 @@ function initPugTemplate(pluginSettings) {
     return pluginContext;
 }
 
-function applyPugTemplate(generatedText, itemConfig, pluginContext) {
-    return pluginContext.pugPageCompiler({
-        text: generatedText,
+function applyPugTemplate(generatedThing, itemConfig, pluginContext) {
+    var templateData = {
         item: itemConfig
-    });
+    };
+    
+    console.log(generatedThing);
+
+    if(typeof generatedThing === "string") {
+        templateData.text = generatedThing;
+    } else {
+        templateData.objects = generatedThing;
+    }
+    return pluginContext.pugPageCompiler(templateData);
 }
 
 ///ApplyPugTemplate Plugin End
@@ -94,7 +108,7 @@ function buildPipeline(pipeline) {
     for(const config of pipeline) {
         var plugin = plugins[config.plugin];
         var pluginConfig = plugin.init(config.pluginSettings);
-        pipelineData.stages.push({ plugin: plugin, config: pluginConfig });
+        pipelineData.stages.push({ plugin: plugin, config: pluginConfig, aggregator: config.plugin === "Aggregate" });
     }
     return pipelineData;
 }
@@ -104,12 +118,17 @@ function executePipeline(inputs, pipeline) {
 
     for(const stage of pipeline.stages) {
         var nexts = [];
-        for(const item of currents) {
-            var next = {
-                itemConfig: item.itemConfig,
-                text: stage.plugin.apply(item.text, item.itemConfig, stage.config)
-            };
-            nexts.push(next);
+        if(stage.aggregator) {
+            nexts[0] = { text: currents, itemConfig: {} };
+            console.log(nexts);
+        } else {
+            for(const item of currents) {
+                var next = {
+                    itemConfig: item.itemConfig,
+                    text: stage.plugin.apply(item.text, item.itemConfig, stage.config)
+                };
+                nexts.push(next);
+            }
         }
         currents = nexts;
     }
@@ -129,50 +148,35 @@ function findFilesForPipeline(pipelineConfig) {
 }
 ///Pipeline Execution Engine End
 
-const testPipeline = {
-    "name": "genPosts",
-    "fileMatcher": ".*\\.md$",
-    "pipeline": [{
-        "plugin": "Markdown2Html"
-    },{
-        "plugin": "ApplyPugTemplate",
-        "pluginSettings": {
-            "template": "./post.pug"
-        }
-    },{
-        "plugin": "WriteFile",
-        "pluginSettings": {
-            "location": "../out",
-            "extension": "html"
-        }
-    }]
-};
 const folder = "betterPosts/";
-
 process.chdir(folder);
 
-var pipelineReg = {};
-pipelineReg[testPipeline.name] = {};
-var testy = pipelineReg[testPipeline.name];
+var pipelines = JSON.parse(fs.readFileSync("./config.json"));
 
-testy.fileNames = findFilesForPipeline(testPipeline);
-testy.files = [];
-testy.pipeline = buildPipeline(testPipeline.pipeline);
+for(const pip of pipelines) {
+    var pipelineReg = {};
+    pipelineReg[pip.name] = {};
+    var testy = pipelineReg[pip.name];
 
-for(const fileName of pipelineReg[testPipeline.name].fileNames) {
-    var item = { name: fileName };
-    var file = fs.readFileSync("./" + fileName, 'utf8');
-    var hasConf = file.search(/\*\*\*\*\*/);
-    if(hasConf >= 0){
-        var conf = JSON.parse(file.substring(0, hasConf));
-        var text = file.substring(hasConf + 7);
-        item.itemConfig = conf;
-        item.text = text;
-    } else {
-        item.itemConfig = {};
-        item.text = file;
+    testy.fileNames = findFilesForPipeline(pip);
+    testy.files = [];
+    testy.pipeline = buildPipeline(pip.pipeline);
+
+    for(const fileName of pipelineReg[pip.name].fileNames) {
+        var item = { name: fileName };
+        var file = fs.readFileSync("./" + fileName, 'utf8');
+        var hasConf = file.search(/\*\*\*\*\*/);
+        if(hasConf >= 0){
+            var conf = JSON.parse(file.substring(0, hasConf));
+            var text = file.substring(hasConf + 7);
+            item.itemConfig = conf;
+            item.text = text;
+        } else {
+            item.itemConfig = {};
+            item.text = file;
+        }
+        testy.files.push(item);
     }
-    testy.files.push(item);
-}
 
-executePipeline(testy.files, testy.pipeline);
+    executePipeline(testy.files, testy.pipeline);
+}
