@@ -10,7 +10,6 @@
   "license": "MIT",
   "dependencies": {
     "pug": "^3.0.2",
-    "reload-static": "^1.0.1",
     "sass": "^1.62.1",
     "showdown": "^2.1.0"
   }
