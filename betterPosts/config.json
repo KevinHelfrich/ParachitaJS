@@ -1,8 +1,13 @@
 [{
     "name": "genPosts",
-    "fileMatcher": ".*\\.md$",
-    "type": "pipeline",
     "pipeline": [{
+        "plugin": "FileFinder",
+        "pluginSettings": {
+            "fileMatcher": ".*\\.md$"
+        }
+    },{
+        "plugin": "FileReader"
+    },{
         "plugin": "Markdown2Html"
     },{
         "plugin": "ApplyPugTemplate",
@@ -18,9 +23,14 @@
     }]
 },{
     "name": "genIndex",
-    "fileMatcher": ".*\\.md$",
-    "type": "pipeline",
     "pipeline": [{
+        "plugin": "FileFinder",
+        "pluginSettings": {
+            "fileMatcher": ".*\\.md$"
+        }
+    },{
+        "plugin": "FileReader"
+    },{
         "plugin": "ApplyPugTemplate",
         "pluginSettings": {
             "template": "postSlug.pug"
@@ -40,9 +50,14 @@
     }]
 },{
     "name": "genCSS",
-    "fileMatcher": ".*\\.scss",
-    "type": "pipeline",
     "pipeline": [{
+        "plugin": "FileFinder",
+        "pluginSettings": {
+            "fileMatcher": ".*\\.scss$"
+        }
+    },{
+        "plugin": "FileReader"
+    },{
         "plugin": "CompileSass"
     },{
         "plugin": "WriteFile",
@@ -53,7 +68,15 @@
     }]
 },{
     "name": "copyImages",
-    "fileMatcher": ".*\\.JPG",
-    "type": "copy",
-    "location": "../out"
+    "pipeline": [{
+        "plugin": "FileFinder",
+        "pluginSettings": {
+            "fileMatcher": ".*\\.JPG$"
+        }
+    },{
+        "plugin": "FileCopier",
+        "pluginSettings": {
+            "location": "../out"
+        }
+    }]
 }]

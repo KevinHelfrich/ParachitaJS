@@ -20,8 +20,67 @@ const plugins = {
     "CompileSass":{
         init: () => {},
         apply: applySassCompile
+    },
+    "FileFinder": {
+        init: initFileFinder,
+        applyAggregate: applyFileFinder
+    },
+    "FileReader": {
+        init: () => {},
+        apply: applyFileReader
+    },
+    "FileCopier": {
+        init: initFileCopier,
+        apply: applyFileCopier
     }
 }
+
+///FileCopier Plugin Begin
+function initFileCopier(pluginSettings) {
+    return { location: pluginSettings.location };
+}
+
+function applyFileCopier(text, itemConfig, pluginContext) {
+    fs.copyFileSync(text, pluginContext.location + "/" + text);
+    return text;
+}
+///FileCopier Plugin End
+
+///FileReader Plugin Begin
+function applyFileReader(text, itemConfig, pluginContext) {
+    var file = fs.readFileSync("./" + text, 'utf8');
+    var hasConf = file.search(/\*\*\*\*\*/);
+    if(hasConf >= 0){
+        var conf = JSON.parse(file.substring(0, hasConf));
+        var text = file.substring(hasConf + 7);
+        //merge in config from file
+        for (const [key, value] of Object.entries(conf)) {
+            itemConfig[key] = value;
+        }
+        file = text;
+    }             
+    return file;
+}
+///FileReader Plugin End
+
+///FileFinder Plugin Begin
+function initFileFinder(pluginSettings) {
+    var matcher = new RegExp(pluginSettings.fileMatcher);
+
+    return { matcher: matcher };
+}
+
+function applyFileFinder(items, pluginContext) {
+    var matchingFiles = [];
+    fs.readdirSync(".").forEach(file => {
+        if(pluginContext.matcher.test(file)) {
+            matchingFiles.push({ text: file, itemConfig: { "**originalFileName": file.substring(0, file.search(/\./)) }});
+        }
+    });
+
+    return matchingFiles;
+}
+///FileFinder Plugin End
 
 ///CompileSass Plugin Begin
 function applySassCompile(text, itemConfig, pluginContext){
@@ -125,12 +184,13 @@ function buildPipeline(pipeline) {
     return pipelineData;
 }
 
-function executePipeline(inputs, pipeline) {
-    var currents = inputs;
+function executePipeline(pipeline) {
+    var currents = [];
 
+    console.log(pipeline);
     for(const stage of pipeline.stages) {
         var nexts = [];
-        if(stage.aggregator) {
+        if(stage.aggregator || stage.plugin.apply === undefined) {
             nexts = stage.plugin.applyAggregate(currents, stage.config);
         } else {
             for(const item of currents) {
@@ -146,56 +206,12 @@ function executePipeline(inputs, pipeline) {
 }
 ///Pipeline Execution Engine End
 
-function findFilesForJob(pipelineConfig) {
-    var matchingFiles = [];
-    var matcher = new RegExp(pipelineConfig.fileMatcher);
-
-    fs.readdirSync(".").forEach(file => {
-        if(matcher.test(file)) {
-            matchingFiles.push(file);
-        }
-    });
-
-    return matchingFiles;
-}
-
 const folder = "betterPosts/";
 process.chdir(folder);
 
 var pipelines = JSON.parse(fs.readFileSync("./config.json"));
 
 for(const pip of pipelines) {
-    var testy = {};
-    testy.fileNames = findFilesForJob(pip);
-
-    if(pip.type === "pipeline") {
-        testy.files = [];
-        testy.pipeline = buildPipeline(pip.pipeline);
-
-        for(const fileName of testy.fileNames) {
-            var item = { name: fileName };
-            var file = fs.readFileSync("./" + fileName, 'utf8');
-            var hasConf = file.search(/\*\*\*\*\*/);
-            if(hasConf >= 0){
-                var conf = JSON.parse(file.substring(0, hasConf));
-                var text = file.substring(hasConf + 7);
-                item.itemConfig = conf;
-                item.text = text;
-            } else {
-                item.itemConfig = {};
-                item.text = file;
-            }
-            
-            item.itemConfig["**originalFileName"] = fileName.substring(0, fileName.search(/\./));
-            testy.files.push(item);
-        }
-
-        executePipeline(testy.files, testy.pipeline);
-    }
-
-    if(pip.type === "copy") {
-        for(const fileName of testy.fileNames) {
-            fs.copyFileSync(fileName, pip.location + "/" + fileName);
-        }
-    }
+    var pipeline = buildPipeline(pip.pipeline);
+    executePipeline(pipeline);
 }
