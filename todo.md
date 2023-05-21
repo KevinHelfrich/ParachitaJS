@@ -6,7 +6,6 @@ fs.watch(postsDir, (eventType, filename) => {
 
 
 Major Features:
-- File watch and rebuild (with logic to minimise full rebuilds, only build the minimal set of files as implied by the change)
+- improve file watch and rebuild to use file readers and pipeline configuration to avoid total rebuilds
 - Better folder handling, the current flat folder mess kinda sucks
-- Auto reload server to aid in dev
 - Adopt Typescript, this code is starting to get confusing
