@@ -94,7 +94,6 @@ function applyFileFinder(items, pluginContext) {
 function applySassCompile(text, itemConfig, pluginContext){
     return sass.compileString(text).css;
 }
-
 ///CompileSass Plugin End
 
 ///ApplyPugTemplate Plugin Begin
@@ -216,9 +215,25 @@ function executePipeline(pipeline) {
 const folder = commandLineOptions["src-dir"];
 process.chdir(folder);
 
+const watching = commandLineOptions.watch;
+
 var pipelines = JSON.parse(fs.readFileSync("./config.json"));
+var pipelinesCache = {};
+var knownPipelines = [];
 
 for(const pip of pipelines) {
     var pipeline = buildPipeline(pip.pipeline);
+    if(watching) {
+        pipelinesCache[pip.name] = pipeline;
+        knownPipelines.push(pip.name);
+    }
     executePipeline(pipeline);
+}
+
+if(watching) {
+    fs.watch(".", (eventType, filename) => {
+        for(const pip of knownPipelines) {
+            executePipeline(pipelinesCache[pip]);
+        }
+    });
 }
