@@ -1,7 +1,15 @@
+const commandLineArgs = require('command-line-args');
 const fs = require('fs');
 const pug = require('pug');
 const showdown  = require('showdown');
 const sass = require('sass');
+
+const optionDefinitions = [
+    { name: 'watch', alias: 'w', type: Boolean },
+    { name: 'src-dir', type: String, defaultOption: true },
+];
+
+const commandLineOptions = commandLineArgs(optionDefinitions);
 
 const plugins = {
     "Markdown2Html": {
@@ -205,7 +213,7 @@ function executePipeline(pipeline) {
 }
 ///Pipeline Execution Engine End
 
-const folder = "betterPosts/";
+const folder = commandLineOptions["src-dir"];
 process.chdir(folder);
 
 var pipelines = JSON.parse(fs.readFileSync("./config.json"));
