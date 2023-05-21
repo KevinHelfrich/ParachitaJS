@@ -10,6 +10,7 @@
   "license": "MIT",
   "dependencies": {
     "command-line-args": "^5.2.1",
+    "express": "^4.18.2",
     "pug": "^3.0.2",
     "sass": "^1.62.1",
     "showdown": "^2.1.0"
