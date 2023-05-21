@@ -179,7 +179,7 @@ function buildPipeline(pipeline) {
     for(const config of pipeline) {
         var plugin = plugins[config.plugin];
         var pluginConfig = plugin.init(config.pluginSettings);
-        pipelineData.stages.push({ plugin: plugin, config: pluginConfig, aggregator: config.aggregate });
+        pipelineData.stages.push({ plugin: plugin, config: pluginConfig, useAggregator: config.aggregate });
     }
     return pipelineData;
 }
@@ -187,10 +187,9 @@ function buildPipeline(pipeline) {
 function executePipeline(pipeline) {
     var currents = [];
 
-    console.log(pipeline);
     for(const stage of pipeline.stages) {
         var nexts = [];
-        if(stage.aggregator || stage.plugin.apply === undefined) {
+        if(stage.useAggregator || stage.plugin.apply === undefined) {
             nexts = stage.plugin.applyAggregate(currents, stage.config);
         } else {
             for(const item of currents) {
