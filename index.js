@@ -1,4 +1,5 @@
 const commandLineArgs = require('command-line-args');
+const express = require('express');
 const fs = require('fs');
 const pug = require('pug');
 const showdown  = require('showdown');
@@ -7,6 +8,7 @@ const sass = require('sass');
 const optionDefinitions = [
     { name: 'watch', alias: 'w', type: Boolean },
     { name: 'src-dir', type: String, defaultOption: true },
+    { name: 'serve', alias: 's', type: String }
 ];
 
 const commandLineOptions = commandLineArgs(optionDefinitions);
@@ -212,10 +214,12 @@ function executePipeline(pipeline) {
 }
 ///Pipeline Execution Engine End
 
+const currentDir = process.cwd();
 const folder = commandLineOptions["src-dir"];
 process.chdir(folder);
 
 const watching = commandLineOptions.watch;
+const serving  = commandLineOptions.serve;
 
 var pipelines = JSON.parse(fs.readFileSync("./config.json"));
 var pipelinesCache = {};
@@ -230,10 +234,61 @@ for(const pip of pipelines) {
     executePipeline(pipeline);
 }
 
+var shouldireload = false;
 if(watching) {
     fs.watch(".", (eventType, filename) => {
         for(const pip of knownPipelines) {
             executePipeline(pipelinesCache[pip]);
         }
+        shouldireload = true;
     });
+    console.log("Watching for changes...");
+}
+
+if(serving) {
+    const app = express();
+
+    app.get('/', (req, res) => {
+        shouldireload = false;
+        var html = fs.readFileSync(currentDir + serving + '/index.html', 'utf8');
+        res.setHeader("Content-Type", "text/html");
+        html = injectReloadScript(html);
+        res.send(html);
+    });
+
+    app.get('/shouldireload', (req, res) => {
+        res.sendStatus(shouldireload ? 300 : 200);
+    });
+
+    app.get(/\/.*html$/, (req, res) => {
+        shouldireload = false;
+        var html = fs.readFileSync(currentDir + serving + req.originalUrl, 'utf8');
+        res.setHeader("Content-Type", "text/html");
+        html = injectReloadScript(html);
+        res.send(html);
+    });
+
+    app.get(/\/.*$/, (req, res) => {
+        var url = req.originalUrl;
+
+        if(url.match(/\./)) {
+            res.sendFile(currentDir + serving + req.originalUrl);
+        } else {
+            shouldireload = false;
+            var html = fs.readFileSync(currentDir + serving + req.originalUrl + '.html', 'utf8');
+            res.setHeader("Content-Type", "text/html");
+            html = injectReloadScript(html);
+            res.send(html);
+        }
+    });
+
+    app.listen("8080", () => {
+        console.log("Dev server listening on port 8080");
+    });
+}
+
+function injectReloadScript(html) {
+    console.log(html);
+    var script = "<script>setInterval(() => { var res = fetch(\"http://localhost:8080/shouldireload\") .then(response => { if(response.status !== 200){ location.reload(); } }); }, 500);</script>";
+    return html.replace(/<\/head>/, script + "</head>");
 }
